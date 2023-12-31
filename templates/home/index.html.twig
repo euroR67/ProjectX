@@ -22,9 +22,12 @@
                     <span>Aliev Baisangour</span>
                     <p>En ligne</p>
                 </div>
-                <div id="messages" {{ turbo_stream_listen('chat') }}></div>
+            </div>
+            <!-- Turbo stream listen pour écouter l'évènement (s'abonner au channel) -->
+            <div id="messages" {{ turbo_stream_listen('chat') }}>
             </div>
 
+            
             <turbo-frame id="message_form">
                 {{ form_start(form) }}
                     {{ form_widget(form.content) }}

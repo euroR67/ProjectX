@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\Message;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -19,6 +20,7 @@ class MessageType extends AbstractType
     {
         $resolver->setDefaults([
             // Configure your form options here
+            'data_class' => Message::class,
         ]);
     }
 }
