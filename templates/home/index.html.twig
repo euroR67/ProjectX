@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello HomeController!{% endblock %}
+
+{% block body %}
+<main>
+    <div class="container">
+        <aside>
+            <nav>
+                <ul>
+                    <li><a href="">Aliev Baisangour</a></li>
+                    <li><a href="">User 2</a></li>
+                    <li><a href="">User 3</a></li>
+                    <li><a href="">User 4</a></li>
+                    <li><a href="">User 5</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <section>
+            <div class="wrap">
+                <div class="user">
+                    <span>Aliev Baisangour</span>
+                    <p>En ligne</p>
+                </div>
+                <div id="messages" {{ turbo_stream_listen('chat') }}></div>
+            </div>
+
+            <turbo-frame id="message_form">
+                {{ form_start(form) }}
+                    {{ form_widget(form.content) }}
+                    <button>Envoyer</button>
+                {{ form_end(form) }}
+            </turbo-frame>
+        </section>
+    </div>
+</main>
+{% endblock %}

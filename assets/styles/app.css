@@ -1,3 +1,99 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    list-style: none;
+    text-decoration: none;
+    font-family: sans-serif;
+}
+
 body {
-    background-color: skyblue;
+    background-color: #dfdfdf;
+    min-height: 100vh;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    background-color: #fff;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    height: 900px;
+    border: 1px solid rgb(204, 204, 204);
+}
+
+.container aside {
+    width: 250px;
+    border-right: 1px solid #dfdfdf;
+}
+
+.container aside ul {
+    display: flex;
+    flex-direction: column;
+}
+
+.container aside ul li a {
+    color: #000;
+    background-color: #c6ead1;
+    padding: 20px;
+    display: inline-block;
+    width: 100%;
+    border-bottom: 1px solid #fff;
+}
+
+.container aside ul li:last-of-type a {
+    border-bottom: none;
+}
+
+.container .user {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid rgb(222, 222, 222);
+}
+
+.container .user p {
+    background-color: #c6ead1;
+
+}
+
+.container div article {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.container section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.container form {
+    height: 50px;
+    width: 100%;
+    display: flex;
+    border: 1px solid rgb(222, 222, 222);
+}
+
+.container form input:first-of-type {
+    width: 90%;
+    border: none;
+    outline: none;
+    padding: 10px;
+}
+
+.container form :last-of-type {
+    width: 10%;
+    border: none;
+    outline: none;
 }

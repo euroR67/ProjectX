@@ -3,3 +3,9 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+# Homepage
+home:
+    path: /
+    controller: App\Controller\HomeController::index
+    methods: GET
