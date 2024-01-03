@@ -9,10 +9,6 @@
             <nav>
                 <ul>
                     <li><a href="">Aliev Baisangour</a></li>
-                    <li><a href="">User 2</a></li>
-                    <li><a href="">User 3</a></li>
-                    <li><a href="">User 4</a></li>
-                    <li><a href="">User 5</a></li>
                 </ul>
             </nav>
         </aside>
@@ -25,6 +21,12 @@
             </div>
             <!-- Turbo stream listen pour écouter l'évènement (s'abonner au channel) -->
             <div id="messages" {{ turbo_stream_listen('chat') }}>
+                {% for message in messages %}
+                    <article id="message_{{ message.id }}">
+                        <p>{{ message.content }}</p>
+                        <div>{{ message.createdAt|date('Y-m-d H:i:s') }}</div>
+                    </article>
+                {% endfor %}
             </div>
 
             

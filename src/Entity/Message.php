@@ -22,6 +22,14 @@ class Message
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\ManyToOne(inversedBy: 'sentMessages')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $sender = null;
+
+    #[ORM\ManyToOne(inversedBy: 'receivedMessages')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $Receiver = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -52,6 +60,30 @@ class Message
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getSender(): ?User
+    {
+        return $this->sender;
+    }
+
+    public function setSender(?User $sender): static
+    {
+        $this->sender = $sender;
+
+        return $this;
+    }
+
+    public function getReceiver(): ?User
+    {
+        return $this->Receiver;
+    }
+
+    public function setReceiver(?User $Receiver): static
+    {
+        $this->Receiver = $Receiver;
 
         return $this;
     }

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello HomeController!{% endblock %}
+
+{% block body %}
+<main>
+    <div class="container">
+        <aside>
+            <nav>
+                <ul>
+                    {% for user in users %}
+                        <li>
+                            <p>{{ user.email }}</p>
+                            <button class="open-modal" data-user-id="{{ user.id }}">Envoyer un message</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+                
+            </nav>
+        </aside>
+        <section>
+            <div class="wrap">
+                <div class="user">
+                </div>
+            </div>
+            <!-- Turbo stream listen pour écouter l'évènement (s'abonner au channel) -->
+            <div id="messages" {{ turbo_stream_listen('chat') }}>
+                
+            </div>
+        </section>
+        <div class="modal">
+            {# <turbo-frame id="message_form">
+                {{ form_start(form) }}
+                    {{ form_widget(form.content) }}
+                    <button>Envoyer</button>
+                {{ form_end(form) }}
+            </turbo-frame> #}
+        </div>
+    </div>
+</main>
+{% endblock %}
