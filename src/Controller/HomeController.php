@@ -19,49 +19,49 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(UserRepository $ur, Request $request, EntityManagerInterface $entityManager, MessageRepository $mr): Response
     {
-        $users = $ur->findAll();
+        // Trouver l'utilisateur qui a comme id 1
+        $user = $ur->find(1);
 
         return $this->render('home/users.html.twig', [
-            'users' => $users,
+            'user' => $user,
         ]);
     }
 
     // Fonction pour envoyer un premier message en tant que expéditeur
-    #[Route('/initiate-chat/{receiver}', name: 'initiate_chat')]
-    public function initiateChat(User $receiver, Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('/sendMessage/{id}', name: 'app_send_message')]
+    public function initiateChat(UserRepository $ur, User $receiver, Request $request, EntityManagerInterface $entityManager): Response
     {
-        // On récupère l'utilisateur connecté
         $user = $this->getUser();
 
-        // On crée un nouveau message
-        $message = new Message();
+        if ($request->isMethod('POST')) {
+            
+            $receiverId = filter_var($request->request->get('receiver_id'), FILTER_SANITIZE_NUMBER_INT);
+            $content = filter_var($request->request->get('content'), FILTER_SANITIZE_STRING);
 
-        // Défini le destinataire du message
-        $message->setReceiver($receiver);
+            $receiverId = $request->request->get('receiver_id');
+            $content = $request->request->get('content');
 
-        $form = $this->createForm(MessageType::class, $message);
+            $receiver = $ur->find($receiverId);
 
-        if($request->isMethod('POST')) {
-            $form->handleRequest($request);
-
-            if($form->isSubmitted() && $form->isValid()) {
-
-                // On enregistre le message
-                $entityManager->persist($message);
-                $entityManager->flush();
-
-                // On redirige vers le chat
-                return $this->redirectToRoute('app_chat');
+            if (!$receiver) {
+                throw $this->createNotFoundException('L\'utilisateur n\'a pas été trouvé.');
             }
+
+            $message = new Message();
+            $message->setSender($user);
+            $message->setReceiver($receiver);
+            $message->setContent($content);
+
+            $entityManager->persist($message);
+            $entityManager->flush();
         }
 
-        return $this->render('home/initiate_chat.html.twig', [
-            'form' => $form->createView(),
-            'receiver' => $receiver,
-        ]);
+        return $this->redirectToRoute('app_home');
     }
 
-    // Fonction pour afficher le chat et envoyer des messages
+    // Fonction pour lister les discussions
+
+    // Fonction pour envoyer un message
     #[Route('/chat', name: 'app_chat')]
     public function chat(Request $request, EntityManagerInterface $entityManager, MessageRepository $mr): Response
     {
