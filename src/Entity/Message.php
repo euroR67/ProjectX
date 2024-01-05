@@ -30,9 +30,12 @@ class Message
     #[ORM\JoinColumn(nullable: false)]
     private ?User $receiver = null;
 
+    #[ORM\Column]
+    private ?bool $isRead = false;
+
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable(null, new \DateTimeZone('Europe/Paris'));
     }
 
     public function getId(): ?int
@@ -84,6 +87,18 @@ class Message
     public function setReceiver(?User $receiver): static
     {
         $this->receiver = $receiver;
+
+        return $this;
+    }
+
+    public function isIsRead(): ?bool
+    {
+        return $this->isRead;
+    }
+
+    public function setIsRead(bool $isRead): static
+    {
+        $this->isRead = $isRead;
 
         return $this;
     }

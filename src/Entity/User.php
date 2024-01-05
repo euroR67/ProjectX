@@ -49,6 +49,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
+    public function countUnreadMessagesFromUser(User $sender): int
+    {
+        $count = 0;
+        foreach ($this->getReceivedMessages() as $message) {
+            if (!$message->isIsRead() && $message->getSender() === $sender) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;

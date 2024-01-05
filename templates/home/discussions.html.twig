@@ -8,22 +8,42 @@
         <aside>
             <nav>
                 <ul>
-                    {% for discussion in discussions %}
+                    {# Liste des discussions de l'utilisateur #}
+                    {% for user in discussedUsers %}
                         <li>
-                            <a href="{{ path('app_discussion', {'id': discussion.id}) }}" data-turbo-action="replace" data-turbo-frame="discussion">
-                                <h2>Discussion avec {{ discussion.receiver == app.user ? discussion.sender.email : discussion.receiver.email }}</h2>
-                                <p>Dernier message : {{ discussion.content }}</p>
-                                <p>Date : {{ discussion.createdAt|date('d-m-Y H:i') }}</p>
+                            <a href="{{ path('discussions', {'receiverId': user.id}) }}">
+                                Discussion avec {{ user.email }}
                             </a>
+                            {% set unreadMessagesCount = app.user.countUnreadMessagesFromUser(user) %}
+                            {% if unreadMessagesCount > 0 %}
+                                <span>{{ unreadMessagesCount }} non lu(s)</span>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
             </nav>
         </aside>
-        <section id="discussion">
-            <turbo-frame id="discussion">
-                {# Le contenu de la discussion sera chargé ici #}
-            </turbo-frame>
+        <section>
+            {# Le contenu de la discussion sera chargé ici #}
+            {% if selectedMessages is defined and selectedMessages is not null %}
+                <ul {{ turbo_stream_listen('chat') }}>
+                    <turbo-frame id="messages">
+                        {# Liste des messages de la discussion sélectionnée #}
+                        {% for message in selectedMessages %}
+                            <article id="message_{{ message.id }}">
+                                <p>{{ message.content }}</p>
+                                <div>{{ message.createdAt|date('Y-m-d H:i:s') }}</div>
+                            </article>
+                        {% endfor %}
+                    </turbo-frame>
+                </ul>
+                <turbo-frame id="message_form">
+                    {{ form_start(form) }}
+                    {{ form_widget(form.content) }}
+                    <button type="submit">Envoyer</button>
+                    {{ form_end(form) }}
+                </turbo-frame>
+            {% endif %}
         </section>
     </div>
 </main>

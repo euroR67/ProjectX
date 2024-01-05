@@ -8,20 +8,19 @@
         <aside>
             <nav>
                 <ul>
-                    <li data-controller="modal">
-                        <p>{{ user.email }}</p>
-                        <button data-target="modal.openModal" data-action="click->modal#open" class="open-modal">Envoyer un message</button>
-                        <div data-modal-target="modal" class="modal">
-                            <turbo-frame id="message_form">
-                                <form action="{{ path('app_send_message', {'id': user.id}) }}" method="POST">
-                                    <input type="hidden" name="receiver_id" value="{{ user.id }}">
-                                    <input type="text" name="content">
-                                    <button>Envoyer</button>
-                                </form>
-                            </turbo-frame>
+                    {% for user in users %}
+                        <li>
+                            {{ user.email }}
+                            <button type="button" onclick="openModal('{{ user.id }}')">Envoyer un message</button>
+                        </li>
+                        <div id="modal-{{ user.id }}" class="modal">
+                            <h2>Envoyer un message à {{ user.email }}</h2>
+                            <form method="post" action="{{ path('send_message', {'id': user.id}) }}">
+                                <textarea name="content" required></textarea>
+                                <button type="submit">Envoyer</button>
+                            </form>
                         </div>
-                        <div data-modal-target="overlay" data-action="click->modal#close" class="overlay"></div>
-                    </li>
+                    {% endfor %}
                 </ul>
             </nav>
         </aside>
@@ -59,4 +58,11 @@
         display: block;
     }
 </style>
+
+<script>
+    function openModal(userId) {
+        var modal = document.getElementById('modal-' + userId);
+        modal.style.display = 'block';
+    }
+    </script>
 {% endblock %}

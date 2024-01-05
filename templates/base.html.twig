@@ -16,8 +16,9 @@
         <header>
             <nav>
                 <ul>
-                    <li><a href="{{ path('app_home') }}">Home</a></li>
-                    <li><a href="{{ path('app_discussions') }}">Messagerie</a></li>
+                    {# <li><a href="{{ path('app_home') }}">Home</a></li> #}
+                    <a href="{{ path('app_home') }}">Accéder aux discussions</a>
+                    <a href="{{ path('app_users') }}">Liste des utilisateurs</a>
                     {% if app.user %}
                         <li><a href="{{ path('app_logout') }}">Logout</a></li>
                     {% else %}

@@ -16,101 +16,142 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class HomeController extends AbstractController
 {
-    // Fonction pour lister les utilisateur
+
     #[Route('/', name: 'app_home')]
-    public function index(UserRepository $ur, Request $request, EntityManagerInterface $entityManager, MessageRepository $mr): Response
+    public function index()
     {
-        // Trouver l'utilisateur qui a comme id 1
-        $user = $ur->find(1);
-
-        return $this->render('home/users.html.twig', [
-            'user' => $user,
-        ]);
-    }
-
-    // Fonction pour envoyer un premier message en tant que expéditeur
-    #[Route('/sendMessage/{id}', name: 'app_send_message')]
-    public function initiateChat(UserRepository $ur, User $receiver, Request $request, EntityManagerInterface $entityManager): Response
-    {
+        // Récupérer l'utilisateur actuellement connecté
         $user = $this->getUser();
 
-        if ($request->isMethod('POST')) {
-            
-            $receiverId = filter_var($request->request->get('receiver_id'), FILTER_SANITIZE_NUMBER_INT);
-            $content = filter_var($request->request->get('content'), FILTER_SANITIZE_STRING);
-
-            $receiverId = $request->request->get('receiver_id');
-            $content = $request->request->get('content');
-
-            $receiver = $ur->find($receiverId);
-
-            if (!$receiver) {
-                throw $this->createNotFoundException('L\'utilisateur n\'a pas été trouvé.');
-            }
-
-            $message = new Message();
-            $message->setSender($user);
-            $message->setReceiver($receiver);
-            $message->setContent($content);
-
-            $entityManager->persist($message);
-            $entityManager->flush();
-        }
-
-        return $this->redirectToRoute('app_home');
-    }
-
-    // Fonction pour lister les discussions
-    #[Route('/discussions', name: 'app_discussions')]
-    public function discussions(): Response
-    {
-        $user = $this->getUser();
-
-        // Récupérer les messages envoyés et reçus
+        // Récupérer tous les messages envoyés et reçus par l'utilisateur
         $sentMessages = $user->getSentMessages();
         $receivedMessages = $user->getReceivedMessages();
 
-        // Fusionner les deux collections en une seule
-        $discussions = new ArrayCollection(
-            array_merge($sentMessages->toArray(), $receivedMessages->toArray())
-        );
+        // Fusionner les messages envoyés et reçus en une seule liste de "discussions"
+        $discussions = array_merge($sentMessages->toArray(), $receivedMessages->toArray());
 
-        // Trier les discussions par date de création
-        $iterator = $discussions->getIterator();
-        $iterator->uasort(function ($a, $b) {
-            return ($a->getCreatedAt() < $b->getCreatedAt()) ? -1 : 1;
-        });
-        $discussions = new ArrayCollection(iterator_to_array($iterator));
+        // Créer une liste unique des utilisateurs avec lesquels l'utilisateur actuel a eu une discussion
+        $discussedUsers = [];
+        foreach ($discussions as $message) {
+            $otherUser = $message->getSender() == $user ? $message->getReceiver() : $message->getSender();
+            if (!in_array($otherUser, $discussedUsers)) {
+                $discussedUsers[] = $otherUser;
+            }
+        }
 
+        // Renvoyer vers la vue avec toutes les données nécessaires
         return $this->render('home/discussions.html.twig', [
-            'discussions' => $discussions,
+            'discussedUsers' => $discussedUsers,
         ]);
     }
 
-    // Fonction pour envoyer un message
-    #[Route('/chat', name: 'app_chat')]
-    public function chat(Request $request, EntityManagerInterface $entityManager, MessageRepository $mr): Response
+    // Fonction pour afficher la liste de tout les utilisateurs
+    #[Route('/users', name: 'app_users')]
+    public function users(UserRepository $userRepository): Response
     {
-        $message = new Message();
+        // Récupérer tous les utilisateurs
+        $users = $userRepository->findAll();
 
+        // Renvoyer vers la vue avec toutes les données nécessaires
+        return $this->render('home/users.html.twig', [
+            'users' => $users,
+        ]);
+    }
+
+    #[Route('/discussions/{receiverId}', name: 'discussions')]
+    public function chat(Request $request, UserRepository $userRepository, $receiverId = null, EntityManagerInterface $entityManager): Response
+    {
+        // Récupérer l'utilisateur actuellement connecté
+        $user = $this->getUser();
+
+        // Récupérer tous les messages envoyés et reçus par l'utilisateur
+        $sentMessages = $user->getSentMessages();
+        $receivedMessages = $user->getReceivedMessages();
+
+        // Fusionner les messages envoyés et reçus en une seule liste de "discussions"
+        $discussions = array_merge($sentMessages->toArray(), $receivedMessages->toArray());
+
+        // Créer une liste unique des utilisateurs avec lesquels l'utilisateur actuel a eu une discussion
+        $discussedUsers = [];
+        foreach ($discussions as $message) {
+            $otherUser = $message->getSender() == $user ? $message->getReceiver() : $message->getSender();
+            if (!in_array($otherUser, $discussedUsers)) {
+                $discussedUsers[] = $otherUser;
+            }
+        }
+
+        // Récupérer les messages de la discussion sélectionnée, si une discussion est sélectionnée
+        $selectedMessages = null;
+        if ($receiverId !== null) {
+            $selectedMessages = array_filter($discussions, function($message) use ($receiverId) {
+                return $message->getReceiver()->getId() == $receiverId || $message->getSender()->getId() == $receiverId;
+            });
+
+            // Convertir le tableau de messages en tableau pour pouvoir le trier
+            $selectedMessages = array_values($selectedMessages);
+
+            // Trier les messages par date de création
+            usort($selectedMessages, function($a, $b) {
+                return $a->getCreatedAt() <=> $b->getCreatedAt();
+            });
+
+            // Marquer tous les messages non lus comme lus
+            foreach ($selectedMessages as $message) {
+                if ($message->getReceiver() === $user && !$message->isIsRead()) {
+                    $message->setIsRead(true);
+                }
+            }
+
+            $entityManager->flush();
+        }
+
+        // Créer le formulaire pour un nouveau message
+        $message = new Message();
         $form = $this->createForm(MessageType::class, $message);
 
-        $emptyForm = clone $form;
-
+        // Gérer la soumission du formulaire
         $form->handleRequest($request);
-
         if ($form->isSubmitted() && $form->isValid()) {
+            // Ajouter l'utilisateur actuel comme expéditeur du message
+            $message->setSender($user);
 
+            // Ajouter le destinataire du message
+            $receiver = $userRepository->find($receiverId);
+            $message->setReceiver($receiver);
+
+            // Enregistrer le message dans la base de données
             $entityManager->persist($message);
             $entityManager->flush();
 
-            $form = $emptyForm;
-
+            // Rediriger vers la même page pour éviter de soumettre le formulaire deux fois
+            return $this->redirectToRoute('discussions', ['receiverId' => $receiverId]);
         }
 
-        return $this->render('home/index.html.twig', [
-            'form' => $form,
-            'messages' => $mr->findAll([], ['createdAt' => 'DESC']),
+        // Renvoyer vers la vue avec toutes les données nécessaires
+        return $this->render('home/discussions.html.twig', [
+            'discussedUsers' => $discussedUsers,
+            'selectedMessages' => $selectedMessages,
+            'form' => $form->createView(),
         ]);
     }
+
+    #[Route('/startChat/{id}', name: 'send_message', methods: ['POST'])]
+    public function sendMessage(Request $request, EntityManagerInterface $em, UserRepository $userRepository, $id)
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            throw $this->createNotFoundException('L\'utilisateur n\'a pas été trouvé.');
+        }
+
+        $message = new Message();
+        $message->setContent($request->request->get('content'));
+        $message->setSender($this->getUser());
+        $message->setReceiver($user);
+        $em->persist($message);
+        $em->flush();
+
+        return $this->redirectToRoute('app_users');
+    }
+    
 }
