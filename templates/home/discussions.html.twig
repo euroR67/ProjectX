@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Discussions{% endblock %}
+
+{% block body %}
+<main>
+    <div class="container">
+        <aside>
+            <nav>
+                <ul>
+                    {% for discussion in discussions %}
+                        <li>
+                            <a href="{{ path('app_discussion', {'id': discussion.id}) }}" data-turbo-action="replace" data-turbo-frame="discussion">
+                                <h2>Discussion avec {{ discussion.receiver == app.user ? discussion.sender.email : discussion.receiver.email }}</h2>
+                                <p>Dernier message : {{ discussion.content }}</p>
+                                <p>Date : {{ discussion.createdAt|date('d-m-Y H:i') }}</p>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </aside>
+        <section id="discussion">
+            <turbo-frame id="discussion">
+                {# Le contenu de la discussion sera chargé ici #}
+            </turbo-frame>
+        </section>
+    </div>
+</main>
+{% endblock %}

@@ -35,7 +35,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'sender', targetEntity: Message::class)]
     private Collection $sentMessages;
 
-    #[ORM\OneToMany(mappedBy: 'Receiver', targetEntity: Message::class)]
+    #[ORM\OneToMany(mappedBy: 'receiver', targetEntity: Message::class)]
     private Collection $receivedMessages;
 
     public function __construct()

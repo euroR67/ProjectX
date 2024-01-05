@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class HomeController extends AbstractController
@@ -60,6 +61,31 @@ class HomeController extends AbstractController
     }
 
     // Fonction pour lister les discussions
+    #[Route('/discussions', name: 'app_discussions')]
+    public function discussions(): Response
+    {
+        $user = $this->getUser();
+
+        // Récupérer les messages envoyés et reçus
+        $sentMessages = $user->getSentMessages();
+        $receivedMessages = $user->getReceivedMessages();
+
+        // Fusionner les deux collections en une seule
+        $discussions = new ArrayCollection(
+            array_merge($sentMessages->toArray(), $receivedMessages->toArray())
+        );
+
+        // Trier les discussions par date de création
+        $iterator = $discussions->getIterator();
+        $iterator->uasort(function ($a, $b) {
+            return ($a->getCreatedAt() < $b->getCreatedAt()) ? -1 : 1;
+        });
+        $discussions = new ArrayCollection(iterator_to_array($iterator));
+
+        return $this->render('home/discussions.html.twig', [
+            'discussions' => $discussions,
+        ]);
+    }
 
     // Fonction pour envoyer un message
     #[Route('/chat', name: 'app_chat')]
